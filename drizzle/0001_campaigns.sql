@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS campaigns(id TEXT PRIMARY KEY,title TEXT NOT NULL,caption TEXT NOT NULL,status TEXT NOT NULL CHECK(status IN ('ready','published','archived')),media_key TEXT NOT NULL,mime TEXT NOT NULL,size INTEGER NOT NULL,created TEXT NOT NULL,updated TEXT NOT NULL,published_at TEXT);

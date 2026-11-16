@@ -1,0 +1,6 @@
+node_modules/
+.private/
+.runtime/
+.wrangler/
+ACCESO-PRIVADO.txt
+DIRECCION-DE-LA-WEB.txt

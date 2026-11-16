@@ -1,0 +1,1 @@
+Copiá PUBLICAR.cmd, publicar.ps1 y publicar.mjs en la carpeta que ya extrajiste de Luciana_Cloudflare, reemplazando los tres archivos del mismo nombre. Después abrí PUBLICAR.cmd. La ventana quedará abierta y, si falla, se abrirá REGISTRO-PUBLICACION.txt: ese registro sirve para revisar el error. No compartas ACCESO-PRIVADO.txt.

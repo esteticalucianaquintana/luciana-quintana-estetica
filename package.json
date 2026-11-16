@@ -1,0 +1,13 @@
+{
+  "name": "luciana-publicacion-independiente",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "wrangler": "4.119.0",
+    "esbuild": "0.25.12"
+  },
+  "scripts": {
+    "build": "esbuild src/worker.ts --bundle --format=esm --platform=neutral --target=es2022 --external:cloudflare:workers --minify --outfile=worker.js",
+    "test": "node --test tests/standalone.test.mjs"
+  }
+}

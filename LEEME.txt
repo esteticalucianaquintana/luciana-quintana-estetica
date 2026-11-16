@@ -1,0 +1,25 @@
+LUCIANA QUINTANA · PUBLICACIÓN INDEPENDIENTE EN CLOUDFLARE
+
+1. Descargá el ZIP en tu computadora Windows y elegí Extraer todo.
+2. Dentro de la carpeta extraída, abrí PUBLICAR.cmd con doble clic.
+3. La herramienta abre TU navegador. Autorizá la cuenta Cloudflare del proyecto.
+4. Esperá el resultado. Al terminar se abre tu página y se generan dos archivos:
+   DIRECCION-DE-LA-WEB.txt: podés compartirlo para verificar la publicación.
+   ACCESO-PRIVADO.txt: contiene la clave del panel; guardalo solo para vos.
+
+No necesitás escribir comandos, instalar Node.js manualmente ni tocar código.
+La primera ejecución descarga Node.js portátil desde el sitio oficial y la herramienta Wrangler desde npm.
+No se contratan planes, no se conecta facturación ni se activa WhatsApp.
+El alojamiento nuevo utiliza los límites gratuitos de tu cuenta; si se agotan, habrá que revisar el uso, sin activar pagos automáticamente.
+Conservá esta carpeta para volver a publicar. No compartas la carpeta después de ejecutarla: tendrá tu acceso privado.
+
+QUÉ CONSERVA
+La portada, los tratamientos y sus imágenes; el calendario visible; disponibilidad L–V 13:30–17:30 y excepciones; zonas, duraciones, reservas y propuestas de cambio con confirmación. La web y la nueva base se publican en tu cuenta Cloudflare. El acceso de gestión usa una clave propia, sin iniciar sesión con ChatGPT.
+
+LÍMITES Y ESTADO REAL
+Se crea una base de pruebas nueva: no se copiaron reservas ni configuración guardadas en la base anterior. La página anterior permanece disponible; no se elimina nada allí. Ajustá las duraciones y el teléfono destinatario de pruebas en el panel nuevo.
+WhatsApp Flows, envíos automáticos/recordatorios y APK nativo siguen pendientes. La agenda sigue en pruebas.
+El paquete y su autenticación se probaron localmente en Linux y con SQLite. No se pudo ejecutar la publicación real ni verificar el iniciador en un Windows físico desde este entorno. Este ZIP prepara la vía de migración; NO significa que la web ya esté migrada.
+
+SI FALLA
+Copiá el mensaje de error sin incluir la clave del archivo privado. No borres la carpeta ni crees cuentas nuevas. Si falla la autenticación en tu propio navegador, habrá que revisar ese error específico.
