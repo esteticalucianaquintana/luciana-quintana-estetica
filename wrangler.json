@@ -16,5 +16,14 @@
   },
   "observability": {
     "enabled": false
-  }
+  },
+  "account_id": "b78ab4a4986c9a14fe115b1c158b4c40",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lq-agenda-6d6356c7",
+      "database_id": "32a252bf-1fc4-47bb-948f-d670549157cb",
+      "migrations_dir": "drizzle"
+    }
+  ]
 }
