@@ -1,1 +1,24 @@
-{"id": "/agenda-lucy.html", "name": "Luciana \u00b7 Agenda privada", "short_name": "Agenda LQ", "start_url": "/agenda-lucy.html", "scope": "/", "display": "standalone", "background_color": "#f4f1ec", "theme_color": "#756e65", "icons": [{"src": "/agenda-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"}, {"src": "/agenda-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}]}
+{
+  "id": "/agenda-lucy.html",
+  "name": "Luciana Quintana · Estética",
+  "short_name": "Luciana Estética",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#e5e5e5",
+  "theme_color": "#555555",
+  "icons": [
+    {
+      "src": "/agenda-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/agenda-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

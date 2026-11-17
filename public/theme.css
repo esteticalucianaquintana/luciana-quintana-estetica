@@ -1,0 +1,21 @@
+/* Shared palette for the website and installed application. */
+:root{--site-background:#e5e5e5;--site-surface:#f4f4f4;--site-button:#555;--site-button-hover:#414141;--site-text:#333;--site-muted:#626262;--site-border:#c6c6c6;--bg:var(--site-background);--paper:var(--site-background);--ink:var(--site-text);--muted:var(--site-muted);--line:var(--site-border)}
+body,body.campaign-home,header,.masthead,footer{background:var(--site-background);color:var(--site-text)}
+body{font-family:'DM Sans',Arial,sans-serif}
+.brand,.home .brand{color:var(--site-text)}
+.panel,.appt,.calendar-panel,.appt form{background:var(--site-surface);border-color:var(--site-border)}
+.notice,.badge,.banner,.banner:nth-child(2){background:#d8d8d8;color:var(--site-text);border-color:var(--site-border)}
+button,.button,.booking-button,.quick-links a,.menu-toggle,.app-navigation summary,.calendar-nav button,.slots button{background:var(--site-button);border-color:var(--site-button);color:#fff}
+button:hover,.button:hover,.booking-button:hover,.quick-links a:hover,.menu-toggle:hover,.app-navigation summary:hover,.calendar-nav button:hover,.slots button:hover{background:var(--site-button-hover);color:#fff}
+.button.light,button.light{background:#d2d2d2;color:var(--site-text);border-color:#aaa}
+.button.light:hover,button.light:hover{background:#bfbfbf;color:var(--site-text)}
+.app-navigation nav{background:var(--site-surface);border-color:var(--site-border)}
+.app-navigation nav a:hover,nav a.active,nav a:hover{background:#d2d2d2;color:var(--site-text)}
+.calendar-week,.calendar-key,.reference-note{color:var(--site-muted)}
+.calendar-days button.calendar-day{background:#d9d9d9;color:#666}
+.calendar-days button.has-slots{background:#c8c8c8;color:#333;border-color:#aaa}
+.calendar-days button.has-slots:after{color:#555}
+.calendar-days button.chosen,.slots button.selected{background:#555;color:#fff;outline-color:#555}
+.calendar-days button.chosen:after{color:#fff}
+#status{border-color:#888}
+.quick-links b,.link-icon{color:#fff}.link-icon{border-color:#aaa}
