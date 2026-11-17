@@ -24,3 +24,53 @@ test('biblioteca compartida: carga y estado persisten; nunca publica en Instagra
  assert.equal((await (await campaigns(request('/api/campaigns',null,cookie),e)).json()).items[0].status,'published');
  const media=await campaigns(request('/api/campaigns/'+id+'/media',null,cookie),e);assert.equal(await media.text(),'test');assert.equal(media.headers.get('cache-control'),'private, no-store');
 });
+
+test('carga manual: exige sesión, origen correcto y consentimiento de prueba',async()=>{
+ const e=globalThis.standaloneEnv,payload={patient:'Paciente ficticia',phone:'',service:1,zones:1,day:'2030-12-09',start:'13:30',testConsent:true};
+ assert.equal((await worker.fetch(request('/api/agenda/admin/book',payload),e)).status,401);
+ assert.equal((await worker.fetch(new Request('https://example.test/api/agenda/admin/book',{method:'POST',headers:{Origin:'https://externo.test',cookie,'Content-Type':'application/json'},body:JSON.stringify(payload)}),e)).status,403);
+ assert.equal((await worker.fetch(request('/api/agenda/admin/book',{...payload,testConsent:false},cookie),e)).status,400);
+});
+let manualBookingId;
+test('turno manual sin teléfono aparece en la misma agenda y bloquea reserva online',async()=>{
+ const e=globalThis.standaloneEnv,payload={patient:'Paciente de papel',phone:'',service:1,zones:1,day:'2030-12-09',start:'13:30',testConsent:true};
+ const r=await worker.fetch(request('/api/agenda/admin/book',payload,cookie),e);assert.equal(r.status,201,await r.clone().text());const booking=await r.json();manualBookingId=booking.id;
+ const list=await (await worker.fetch(request('/api/agenda/admin/bookings',null,cookie),e)).json();const saved=list.find(x=>x.id===booking.id);assert.equal(saved.patient,'Paciente de papel');assert.equal(saved.phone,'');assert.equal(saved.start,810);assert.equal(saved.duration,30);
+ const availability=await (await worker.fetch(request('/api/agenda/slots?service=0&zones=1&day=2030-12-09'),e)).json();assert(!availability.slots.includes('13:30'));assert(!availability.slots.includes('13:45'));assert(availability.slots.includes('14:00'));
+ const conflict=await worker.fetch(request('/api/agenda/book',{...payload,patient:'Online',phone:'5492990000000',service:0,start:'13:45'}),e);assert.equal(conflict.status,409);
+ const notice=db.prepare("SELECT payload FROM agenda_notices WHERE booking=? AND kind='reservation'").get(booking.id);assert.equal(JSON.parse(notice.payload).source,'manual');
+});
+test('reserva online impide que Luciana asigne el mismo espacio',async()=>{
+ const e=globalThis.standaloneEnv,payload={patient:'Reserva online',phone:'5492990000000',service:0,zones:1,day:'2030-12-09',start:'14:00',testConsent:true};
+ assert.equal((await worker.fetch(request('/api/agenda/book',payload),e)).status,201);
+ assert.equal((await worker.fetch(request('/api/agenda/admin/book',{...payload,patient:'Superpuesta'},cookie),e)).status,409);
+ assert.equal(db.prepare("SELECT COUNT(*) n FROM agenda_bookings WHERE day='2030-12-09' AND start=840").get().n,1);
+});
+test('carga manual respeta validación, horarios y duración por zonas',async()=>{
+ const e=globalThis.standaloneEnv,base={patient:'Ejemplo',phone:'',service:0,zones:3,day:'2030-12-10',start:'15:00',testConsent:true};
+ for(const change of [{patient:''},{phone:'123'},{service:99},{zones:0},{zones:21},{start:'30:00'},{day:'no-fecha'},{day:'2000-01-01'}])assert.notEqual((await worker.fetch(request('/api/agenda/admin/book',{...base,...change},cookie),e)).status,201);
+ assert.equal((await worker.fetch(request('/api/agenda/admin/book',{...base,start:'08:00'},cookie),e)).status,409);
+ const r=await worker.fetch(request('/api/agenda/admin/book',{...base,phone:'5492990000001'},cookie),e);assert.equal(r.status,201);assert.equal((await r.json()).duration,45);
+ const b=db.prepare("SELECT * FROM agenda_bookings WHERE day='2030-12-10'").get();assert.equal(b.phone,'5492990000001');
+});
+test('cancelar turno manual libera disponibilidad para reservas online',async()=>{
+ const e=globalThis.standaloneEnv;
+ assert.equal((await worker.fetch(request('/api/agenda/admin/cancel',{id:manualBookingId},cookie),e)).status,200);
+ const r=await worker.fetch(request('/api/agenda/book',{patient:'Nueva reserva',phone:'5492990000002',service:1,zones:1,day:'2030-12-09',start:'13:30',testConsent:true}),e);assert.equal(r.status,201);
+ assert.equal(db.prepare('SELECT status FROM agenda_bookings WHERE id=?').get(manualBookingId).status,'cancelled');
+});
+test('el formulario público sigue exigiendo teléfono',async()=>{
+ const r=await worker.fetch(request('/api/agenda/book',{patient:'Online sin teléfono',phone:'',service:0,zones:1,day:'2030-12-11',start:'13:30',testConsent:true}),globalThis.standaloneEnv);assert.equal(r.status,400);
+});
+import vm from 'node:vm';
+test('panel manual: sincroniza día, envía el turno y actualiza el listado',async()=>{
+ class Element{constructor(){this.value='';this.disabled=false;this.checked=false;this.events={};this.options=[];this.textContent=''}addEventListener(type,fn){this.events[type]=fn}replaceChildren(){this.options=[];this.value=''}add(o){this.options.push(o);if(this.options.length===1)this.value=String(o.value)}}
+ const ids=['manualBooking','manualService','manualZones','manualDay','manualSave','manualTime','manualDuration','manualMessage','manualPatient','manualPhone','manualConsent','filterDay','manualPanel'];const nodes=Object.fromEntries(ids.map(x=>[x,new Element()]));nodes.manualZones.value='1';nodes.filterDay.value='2030-12-16';const calls=[];let rendered=0;
+ const source=readFileSync('public/turnos.js','utf8').split('// Manual entries share the same server availability and locking as online bookings.')[1].split('\ninit().catch')[0];
+ const context={document:{getElementById:id=>nodes[id],querySelector:()=>({addEventListener(){}})},names:['Láser','Vela','Crio','RF'],today:'2030-12-16',Option:class{constructor(text,value){this.text=text;this.value=value}},$:id=>nodes[id],api:async(path,data)=>{calls.push({path,data});return path.startsWith('slots?')?{duration:30,slots:['14:00','14:30']}:{id:'manual-test'}},msg(){},renderBookings:async()=>{rendered++},renderCalendar:async()=>{},renderNotices:async()=>{}};
+ vm.createContext(context);vm.runInContext(source,context);vm.runInContext('initManualBooking()',context);await new Promise(r=>setImmediate(r));
+ assert.equal(nodes.manualSave.disabled,false);assert.equal(nodes.manualTime.value,'14:00');nodes.filterDay.value='2030-12-17';await vm.runInContext('syncManualDay()',context);assert.equal(nodes.manualDay.value,'2030-12-17');
+ nodes.manualPatient.value='  Prueba de agenda  ';nodes.manualPhone.value='+54 9 299 0000000';nodes.manualConsent.checked=true;await nodes.manualBooking.onsubmit({preventDefault(){}});
+ const saved=calls.find(x=>x.path==='admin/book');assert(saved);assert.equal(saved.data.patient,'Prueba de agenda');assert.equal(saved.data.phone,'5492990000000');assert.equal(saved.data.day,'2030-12-17');assert.equal(saved.data.start,'14:00');assert.equal(rendered,1);assert.equal(nodes.manualPatient.value,'');assert.equal(nodes.manualConsent.checked,false);
+ const html=readFileSync('public/agenda-lucy.html','utf8');for(const id of ids)assert(html.includes('id="'+id+'"'),id);
+});
