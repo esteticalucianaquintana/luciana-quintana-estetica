@@ -52,3 +52,32 @@ nav a.active,nav a:hover{background:#d2d2d2}
  .section-heading{margin-bottom:6px}.reference-note{margin:4px 0;font-size:8px}.quick-links a{padding:7px 13px;font-size:12px}
  footer{padding:7px 3.5%;flex:0 0 auto}
 }
+
+@media (max-width: 759px) {
+  .masthead { padding: 8px 4%; gap: 8px; }
+  .brand { font-size: 22px; }
+  .brand small { margin-top: 3px; }
+  .menu-toggle { min-height: 44px; }
+  nav.open { flex-wrap: wrap; }
+  main { display: grid; flex: 0 0 auto; gap: 10px; margin: auto; padding: 8px 0; }
+  .campaign { min-height: 0; height: auto; margin: 0; }
+  .campaign-image img { height: clamp(68px, 14svh, 118px); object-fit: contain; }
+  .campaign-copy { padding: 10px 14px; gap: 8px; }
+  .campaign-copy h1 { font-size: clamp(23px, 6vw, 32px); margin: 0; }
+  .campaign-copy h1 br { display: none; }
+  .campaign-copy h1 em::before { content: " "; }
+  .eyebrow, .service-line, .lavender-line, .card-action, .small-line { display: none; }
+  .booking-button { border-radius: 7px; min-height: 44px; padding: 8px 14px; box-shadow: none; }
+  .section-heading { margin-bottom: 6px; }
+  .service-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+  .treatment-card { min-height: 0; flex-direction: column; border-radius: 7px; }
+  .card-visual { flex: none; }
+  .card-visual img { height: clamp(46px, 10svh, 88px); width: 100%; object-fit: contain; }
+  .card-copy { padding: 5px 7px; }
+  .card-copy h3 { font-size: 14px; }
+  .reference-note { margin: 4px 0 0; font-size: 10px; }
+  .quick-links { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; margin: 0; }
+  .quick-links a { min-height: 48px; padding: 6px; text-align: center; justify-content: center; border-radius: 7px; box-shadow: none; line-height: 1.2; }
+  .quick-links .link-icon, .quick-links b { display: none; }
+  footer { padding: 8px 4%; }
+}
