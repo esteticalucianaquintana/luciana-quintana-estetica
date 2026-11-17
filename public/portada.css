@@ -13,3 +13,27 @@
 @media(max-width:759px){.campaign:after{background:linear-gradient(90deg,#eae6e0ef 0%,#eae6e0c4 38%,#eae6e025 75%)}.menu-toggle{background:#d6d0c8;border-color:#bdb3a5}.card-action{font-size:9px}.quick-links a{background:#d6d0c8}}
 
 @media(min-width:760px) and (min-height:480px){.campaign{height:auto;min-height:0}.service-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* Requested neutral gray palette and complete photography. */
+:root{--paper:#e5e5e5;--cream:#cecece;--ink:#333;--muted:#626262;--line:#c6c6c6}
+.campaign-home,.masthead,footer{background:var(--paper)}
+.booking-button,.quick-links a{background:#555;color:#fff;border-color:#555}
+.booking-button:hover,.quick-links a:hover{background:#414141}
+.quick-links b,.link-icon{color:#fff}.link-icon{border-color:#aaa}
+.treatment-card{background:#d2d2d2;border-color:#b9b9b9}.treatment-card:hover{background:#c4c4c4}
+.card-visual{flex-basis:42%;background:#eee;display:flex;align-items:center}
+.card-visual img,.laser-crop img,.equipment img{position:static;width:100%;height:auto;max-width:100%;object-fit:contain;inset:auto;aspect-ratio:4/3}
+.campaign{display:grid;grid-template-columns:1fr 1.25fr;min-height:290px;height:auto;background:#e5e5e5}
+.campaign-image{position:static;grid-column:2;grid-row:1;z-index:auto;display:flex;align-items:center;background:#eee}
+.campaign-image img{position:static;width:100%;height:auto;max-width:100%;object-fit:contain;inset:auto}
+.campaign-copy{grid-column:1;grid-row:1;z-index:1}.campaign:after{display:none}.campaign-tag{display:none}
+main{max-height:none;grid-template-rows:auto auto auto}body.campaign-home{height:auto;min-height:100svh}
+@media(max-width:759px){.campaign{grid-template-columns:1fr}.campaign-image{grid-column:1;grid-row:1}.campaign-copy{grid-column:1;grid-row:2;padding:24px}.campaign{margin-bottom:24px}.card-visual{flex-basis:42%}}
+
+/* Keep controls legible and photographs complete at every screen size. */
+.campaign-image img{height:auto!important;max-height:none;transform:none}
+.card-visual img,.laser-crop img,.equipment img{height:auto!important;max-height:none;transform:none}
+.card-copy{min-width:0;flex:1}.card-copy h3{overflow-wrap:anywhere}
+.treatment-card{align-items:center}.card-action{line-height:1.4}
+nav a.active,nav a:hover{background:#d2d2d2}
+@media(max-width:420px){.service-grid{grid-template-columns:1fr}.card-visual{flex-basis:38%}.card-copy h3{font-size:20px}.card-action{font-size:12px}}
