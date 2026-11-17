@@ -24,3 +24,11 @@ Para archivos de campañas, enlazar un bucket R2 privado como CAMPAIGN_MEDIA. No
 Publicación directa en Instagram, WhatsApp Flows y envíos automáticos están pendientes de conectar Meta. Los avisos de agenda son simulados. No hay cron de recordatorios activo.
 
 No subir `.private/`, ACCESO-PRIVADO.txt, credenciales ni datos de pacientes a GitHub.
+
+## Biblioteca de campañas preparada para conexión
+
+Se pueden guardar, buscar, copiar y editar títulos/textos sin R2. Un registro `ready` sin `media_key` se muestra como borrador; puede archivarse o recuperarse. Se conservan los estados actuales de la tabla. No se agregan migraciones ni bases: para borradores se guardan `media_key=''`, `mime=''`, `size=0` en la tabla existente.
+
+Con CAMPAIGN_MEDIA autorizado se habilita la carga opcional y se puede adjuntar un archivo a un borrador existente. Se rechaza reemplazar un archivo para preservar el original. Límite actual: 50 MB; MP4, JPG, PNG, WebP. Guardar un borrador sin archivo NO almacena el video en el navegador ni en el servidor.
+
+Instagram sigue desconectado. Marcar publicada registra una publicación manual; no crea anuncios ni envía contenido a Meta. No se activa R2, facturación ni integraciones. No aplicar migraciones remotas ni desplegar esta propuesta sin aprobación del propietario.
