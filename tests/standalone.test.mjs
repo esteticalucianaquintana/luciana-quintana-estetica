@@ -1,11 +1,11 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {DatabaseSync} from 'node:sqlite';import {readFileSync,readdirSync} from 'node:fs';import {isAdmin,auth} from '../src/auth.mjs';
 const key='test-only-private-key-0123456789-abcdefghijklmnopqrstuvwxyz';const E={ADMIN_KEY:key};
 const request=(p,data,cookie)=>new Request('https://example.test'+p,{method:data?'POST':'GET',headers:{Origin:'https://example.test',...(cookie?{cookie}:{}),...(data?{'Content-Type':'application/json'}:{})},body:data?JSON.stringify(data):undefined});let cookie;
-test('la clave protege el panel sin identidad de ChatGPT',async()=>{assert.equal(await isAdmin(request('/'),E),false);assert.equal(await isAdmin(new Request('https://example.test/',{headers:{'oai-authenticated-user-email':'gonzalopaterson@gmail.com'}}),E),false);assert.equal((await auth(request('/api/auth/login',{password:'incorrecta'}),E)).status,401);const r=await auth(request('/api/auth/login',{password:key}),E);assert.equal(r.status,200);cookie=r.headers.get('set-cookie').split(';')[0];assert(cookie.startsWith('__Host-lq='));assert(await isAdmin(request('/',null,cookie),E));assert(!await isAdmin(request('/',null,cookie+'x'),E));assert(!await isAdmin(request('/',null,cookie),E,Date.now()+86400000));assert(!await isAdmin(request('/',null,cookie),{ADMIN_KEY:key+'changed'}));});
+test('la clave protege el panel sin identidad de ChatGPT',async()=>{assert.equal(await isAdmin(request('/'),E),false);assert.equal(await isAdmin(new Request('https://example.test/',{headers:{'oai-authenticated-user-email':'gonzalopaterson@gmail.com'}}),E),false);assert.equal((await auth(request('/api/auth/login',{password:'incorrecta'}),E)).status,401);const r=await auth(request('/api/auth/login',{password:key}),E);assert.equal(r.status,200);cookie=r.headers.get('set-cookie').split(';')[0];assert(cookie.startsWith('__Host-lq='));assert(await isAdmin(request('/',null,cookie),E));assert(!await isAdmin(request('/',null,cookie+'x'),E));assert(!await isAdmin(request('/',null,cookie),E,Date.now()+86400000));assert(!await isAdmin(request('/',null,cookie),{...E,ADMIN_KEY:key+'changed'}));});
 test('rechaza origen externo y no da una clave por defecto',async()=>{let r=await auth(new Request('https://example.test/api/auth/login',{method:'POST',headers:{Origin:'https://other.test','Content-Type':'application/json'},body:JSON.stringify({password:key})}),E);assert.equal(r.status,403);assert.equal((await auth(request('/api/auth/login',{password:key}),{})).status,503)});
 // The integration test loads the exact worker source with Cloudflare's binding replaced by an in-memory SQLite D1 adapter.
 const db=new DatabaseSync(':memory:');for(const f of readdirSync('drizzle').filter(x=>x.endsWith('.sql')))db.exec(readFileSync('drizzle/'+f,'utf8'));
-const DB={prepare(sql){return{sql,v:[],bind(...x){this.v=x;return this},async first(){return db.prepare(this.sql).get(...this.v)||null},async all(){return{results:db.prepare(this.sql).all(...this.v)}},async run(){return db.prepare(this.sql).run(...this.v)}}},async batch(a){db.exec('BEGIN IMMEDIATE');try{const r=a.map(x=>({results:db.prepare(x.sql).all(...x.v)}));db.exec('COMMIT');return r}catch(e){db.exec('ROLLBACK');throw e}}};globalThis.standaloneEnv={...E,DB,ASSETS:{fetch:()=>new Response('asset')}};
+const DB={prepare(sql){return{sql,v:[],bind(...x){this.v=x;return this},async first(){return db.prepare(this.sql).get(...this.v)||null},async all(){return{results:db.prepare(this.sql).all(...this.v)}},async run(){const r=db.prepare(this.sql).run(...this.v);return {...r,meta:{changes:r.changes}}}}},async batch(a){db.exec('BEGIN IMMEDIATE');try{const r=a.map(x=>({results:db.prepare(x.sql).all(...x.v)}));db.exec('COMMIT');return r}catch(e){db.exec('ROLLBACK');throw e}}};E.DB=DB;globalThis.standaloneEnv={...E,DB,ASSETS:{fetch:()=>new Response('asset')}};
 const {build}=await import(process.env.LQ_ESBUILD_MODULE||'esbuild');await build({entryPoints:['src/worker.ts'],outfile:'/tmp/lq-standalone-test.mjs',bundle:true,platform:'node',format:'esm',plugins:[{name:'mock-env',setup(b){b.onResolve({filter:/^cloudflare:workers$/},()=>({path:'env',namespace:'test'}));b.onLoad({filter:/.*/,namespace:'test'},()=>({contents:'export const env=globalThis.standaloneEnv'}))}}]});const worker=(await import('/tmp/lq-standalone-test.mjs')).default;
 test('web y reserva usan una sola base; gestión requiere cookie propia',async()=>{let r=await worker.fetch(request('/api/agenda/admin/bookings'),globalThis.standaloneEnv);assert.equal(r.status,401);let b=await worker.fetch(request('/api/agenda/book',{service:0,zones:3,day:'2030-12-02',start:'13:30',patient:'Ejemplo',phone:'5492990000000',testConsent:true}),globalThis.standaloneEnv);assert.equal(b.status,201,await b.clone().text());let rows=await worker.fetch(request('/api/agenda/admin/bookings',null,cookie),globalThis.standaloneEnv);assert.equal(rows.status,200);assert.equal((await rows.json())[0].duration,45);let conflict=await worker.fetch(request('/api/agenda/book',{service:1,zones:1,day:'2030-12-02',start:'13:45',patient:'Otra',phone:'5492990000000',testConsent:true}),globalThis.standaloneEnv);assert.equal(conflict.status,409);});
 import {campaigns} from '../src/campaigns.mjs';
@@ -73,4 +73,20 @@ test('panel manual: sincroniza día, envía el turno y actualiza el listado',asy
  nodes.manualPatient.value='  Prueba de agenda  ';nodes.manualPhone.value='+54 9 299 0000000';nodes.manualConsent.checked=true;await nodes.manualBooking.onsubmit({preventDefault(){}});
  const saved=calls.find(x=>x.path==='admin/book');assert(saved);assert.equal(saved.data.patient,'Prueba de agenda');assert.equal(saved.data.phone,'5492990000000');assert.equal(saved.data.day,'2030-12-17');assert.equal(saved.data.start,'14:00');assert.equal(rendered,1);assert.equal(nodes.manualPatient.value,'');assert.equal(nodes.manualConsent.checked,false);
  const html=readFileSync('public/agenda-lucy.html','utf8');for(const id of ids)assert(html.includes('id="'+id+'"'),id);
+});
+
+test('rotar la contraseña del panel conserva la conexión de correo',async()=>{
+ const env=globalThis.standaloneEnv;
+ const call=(path,body,session)=>worker.fetch(request(path,body,session),env);
+ const mail=async session=>(await (await call('/api/correo/conectar',{},session)).json()).key;
+ const before=await mail(cookie);
+ const password='una frase de prueba nueva';
+ assert.equal((await call('/api/auth/password',{password})).status,401);
+ const changed=await call('/api/auth/password',{password},cookie);
+ assert.equal(changed.status,200);
+ const fresh=changed.headers.get('set-cookie').split(';')[0];
+ assert.equal((await call('/api/auth/login',{password:key})).status,401);
+ assert.equal((await call('/api/auth/login',{password})).status,200);
+ assert.equal(await isAdmin(request('/',null,cookie),env),false);
+ assert.ok(before && before===await mail(fresh));
 });
