@@ -7,7 +7,7 @@
     "esbuild": "0.25.12"
   },
   "scripts": {
-    "build": "esbuild src/worker.ts --bundle --format=esm --platform=neutral --target=es2022 --external:cloudflare:workers --minify --outfile=worker.js",
+    "build": "esbuild src/worker.ts --bundle --format=esm --platform=neutral --target=es2022 --external:cloudflare:workers --external:node:buffer --minify --outfile=worker.js",
     "test": "node --test tests/standalone.test.mjs",
     "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy"
   }
