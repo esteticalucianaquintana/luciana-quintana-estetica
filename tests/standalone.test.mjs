@@ -80,7 +80,8 @@ test('rotar la contraseña del panel conserva la conexión de correo',async()=>{
  const call=(path,body,session)=>worker.fetch(request(path,body,session),env);
  const mail=async session=>(await (await call('/api/correo/conectar',{},session)).json()).key;
  const before=await mail(cookie);
- const password='una frase de prueba nueva';
+ const password='0123';
+ for(const bad of ['123','123456789','abcd'])assert.equal((await call('/api/auth/password',{password:bad},cookie)).status,400);
  assert.equal((await call('/api/auth/password',{password})).status,401);
  const changed=await call('/api/auth/password',{password},cookie);
  assert.equal(changed.status,200);
@@ -89,4 +90,10 @@ test('rotar la contraseña del panel conserva la conexión de correo',async()=>{
  assert.equal((await call('/api/auth/login',{password})).status,200);
  assert.equal(await isAdmin(request('/',null,cookie),env),false);
  assert.ok(before && before===await mail(fresh));
+ const remembered=await call('/api/auth/login',{password,remember:true});
+ assert.match(remembered.headers.get('set-cookie'),/Max-Age=2592000/);
+ assert.ok(await isAdmin(request('/',null,remembered.headers.get('set-cookie').split(';')[0]),env,Date.now()+86400000));
+ for(let i=0;i<5;i++)assert.equal((await call('/api/auth/login',{password:'0000'})).status,401);
+ assert.equal((await call('/api/auth/login',{password:'0000'})).status,429);
 });
+
