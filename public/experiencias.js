@@ -3,14 +3,25 @@ const endpoint = '/api/experiencias' + (admin ? '/admin' : '');
 const lista = document.querySelector('#lista');
 const mas = document.querySelector('#mas');
 const estado = document.querySelector('#estado');
-let cursor = '';
+const publicadas = admin && new URLSearchParams(location.search).get('vista') === 'publicadas';
+if (admin) document.querySelector('h1').textContent = publicadas ? 'Opiniones publicadas' : 'Opiniones pendientes';
+const params = new URLSearchParams();
+if (publicadas) params.set('vista','publicadas');
+const abrirFormulario = () => {
+  if (location.hash === '#contar') {
+    const panel = document.querySelector('#contar');
+    if (panel) { panel.open = true; panel.scrollIntoView(); }
+  }
+};
+abrirFormulario();
+window.addEventListener('hashchange',abrirFormulario);
 async function enviar(url, data) {
   return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
 }
 async function cargar() {
   mas.disabled = true;
   try {
-    const res = await fetch(endpoint + cursor);
+    const res = await fetch(endpoint + '?' + params);
     if (res.status === 401) { location.replace('/acceso.html'); return; }
     if (!res.ok) throw Error();
     const data = await res.json();
@@ -23,12 +34,13 @@ async function cargar() {
       opinion.textContent = item.opinion;
       card.append(firma,opinion);
       if (admin) {
-        for (const [label,value] of [['Publicar','publicada'],['Descartar','descartada']]) {
+        for (const [label,value] of (publicadas ? [['Borrar','borrada']] : [['Publicar','publicada'],['Descartar','descartada'],['Borrar','borrada']])) {
           const button = document.createElement('button');
           button.textContent = label;
           button.onclick = async () => {
             try {
-              const result = await enviar(endpoint,{id:item.id,estado:value});
+              if (value === 'borrada' && !confirm('¿Borrar definitivamente esta opinión de '+item.firma+'?')) return;
+              const result = await enviar(endpoint,value === 'borrada' ? {id:item.id,accion:'borrar'} : {id:item.id,estado:value});
               if (!result.ok) throw Error();
               card.remove();
               estado.textContent = 'Opinión '+value+'.';
@@ -38,10 +50,10 @@ async function cargar() {
         }
       }
       lista.append(card);
-      cursor = '?antes='+item.id;
+      params.set('antes',item.id);
     }
     mas.hidden = !data.mas;
-    estado.textContent = lista.children.length ? '' : (admin ? 'No hay opiniones pendientes.' : 'Todavía no hay experiencias publicadas. Podés compartir la tuya.');
+    estado.textContent = lista.children.length ? '' : (admin ? (publicadas ? 'No hay opiniones publicadas.' : 'No hay opiniones pendientes.') : 'Todavía no hay experiencias publicadas. Podés compartir la tuya.');
   } catch { estado.textContent = 'No se pudieron cargar las experiencias. Actualizá para reintentar.'; }
   finally { mas.disabled = false; }
 }
