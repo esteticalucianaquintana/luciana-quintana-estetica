@@ -1,0 +1,48 @@
+// Configuración privada de esta agenda. Mantené este proyecto de Google personal.
+const API = __API__;
+const CLAVE_CORREO = __KEY__;
+const DESTINO = __TO__;
+
+function consultar(datos) {
+  const respuesta = UrlFetchApp.fetch(API, {
+    method: 'post', contentType: 'application/json',
+    headers: {Authorization: 'Bearer '+CLAVE_CORREO},
+    payload: JSON.stringify(datos)
+  });
+  return JSON.parse(respuesta.getContentText());
+}
+
+function activar() {
+  const propiedades = PropertiesService.getScriptProperties();
+  if (propiedades.getProperty('cursor') === null) {
+    propiedades.setProperty('cursor', String(consultar({inicio:true}).cursor));
+  }
+  if (!ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === 'enviarReservas')) {
+    ScriptApp.newTrigger('enviarReservas').timeBased().everyMinutes(5).create();
+  }
+}
+
+function enviarReservas() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(1000)) return;
+  try {
+    const propiedades = PropertiesService.getScriptProperties();
+    const guardado = propiedades.getProperty('cursor');
+    if (guardado === null) throw Error('Ejecutá activar primero.');
+    const reservas = consultar({cursor:Number(guardado)}).reservas;
+    let cupo = MailApp.getRemainingDailyQuota();
+    for (const r of reservas) {
+      if (cupo <= 0) break;
+      const fecha = r.dia.split('-').reverse().join('/');
+      MailApp.sendEmail({
+        to:DESTINO, name:'Luciana Quintana · Estética',
+        subject:'[PRUEBA] Nuevo turno en tu agenda',
+        body:['Hola, Luciana.', '', 'Se registró un turno de prueba.', '',
+          'Paciente: '+r.paciente, 'Servicio: '+r.servicio,
+          'Fecha: '+fecha+' a las '+r.hora+' (hora de Neuquén)', 'Origen: '+r.origen].join('\n')
+      });
+      propiedades.setProperty('cursor',String(r.cursor));
+      cupo--;
+    }
+  } finally { lock.releaseLock(); }
+}
