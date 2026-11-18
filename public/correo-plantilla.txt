@@ -29,7 +29,7 @@ function enviarReservas() {
     const propiedades = PropertiesService.getScriptProperties();
     const guardado = propiedades.getProperty('cursor');
     if (guardado === null) throw Error('Ejecutá activar primero.');
-    const reservas = consultar({cursor:Number(guardado)}).reservas;
+    const reservas = consultar({cursor:Number(guardado),formato:2}).reservas;
     let cupo = MailApp.getRemainingDailyQuota();
     for (const r of reservas) {
       if (cupo <= 0) break;
@@ -38,7 +38,7 @@ function enviarReservas() {
         to:DESTINO, name:'Luciana Quintana · Estética',
         subject:'[PRUEBA] Nuevo turno en tu agenda',
         body:['Hola, Luciana.', '', 'Se registró un turno de prueba.', '',
-          'Paciente: '+r.paciente, 'Servicio: '+r.servicio,
+          'Paciente: '+r.paciente, 'Teléfono: '+r.telefono, 'Servicio: '+r.servicio,
           'Fecha: '+fecha+' a las '+r.hora+' (hora de Neuquén)', 'Origen: '+r.origen].join('\n')
       });
       propiedades.setProperty('cursor',String(r.cursor));

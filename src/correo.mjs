@@ -25,9 +25,12 @@ export async function correo(req, env) {
     return reply(row);
   }
   if (!Number.isSafeInteger(data?.cursor) || data.cursor < 0) return reply({},400);
-  const {results} = await env.DB.prepare("SELECT n.rowid AS cursor,n.payload,b.service,b.patient FROM agenda_notices n JOIN agenda_bookings b ON b.id=n.booking WHERE n.rowid>? AND n.kind='reservation' ORDER BY n.rowid LIMIT 20").bind(data.cursor).all();
+  const {results} = await env.DB.prepare("SELECT n.rowid AS cursor,n.payload,b.service,b.patient,b.phone FROM agenda_notices n JOIN agenda_bookings b ON b.id=n.booking WHERE n.rowid>? AND n.kind='reservation' ORDER BY n.rowid LIMIT 20").bind(data.cursor).all();
   return reply({reservas:results.map(row=>{
     const notice=JSON.parse(row.payload);
-    return {cursor:row.cursor,servicio:names[row.service],paciente:row.patient,dia:notice.day,hora:clock(notice.start),origen:notice.source==='manual'?'Panel de Luciana':'Reserva online'};
+    const telefono = row.phone?.trim() || 'No informado';
+    // The installed sender renders only paciente. Keep its contact block readable until updated.
+    const paciente = data.formato === 2 ? row.patient : row.patient + '\nTeléfono: ' + telefono;
+    return {cursor:row.cursor,servicio:names[row.service],paciente,telefono,dia:notice.day,hora:clock(notice.start),origen:notice.source==='manual'?'Panel de Luciana':'Reserva online'};
   })});
 }
